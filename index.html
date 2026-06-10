@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QCM CCNA 3 ENSAv7</title>
+<style>
+  :root {
+    --bg: #0f172a; --panel: #1e293b; --panel-2: #334155;
+    --text: #e2e8f0; --muted: #94a3b8; --accent: #3b82f6;
+    --accent-hover: #2563eb; --good: #22c55e; --bad: #ef4444; --border: #475569;
+  }
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; line-height: 1.5; }
+  .container { max-width: 900px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 24px; }
+  h1 { margin: 0 0 8px; font-size: 1.8rem; }
+  .subtitle { color: var(--muted); font-size: 0.9rem; }
+  .panel { background: var(--panel); border-radius: 12px; padding: 24px; margin-bottom: 16px; border: 1px solid var(--border); }
+  .setup-grid { display: grid; gap: 16px; }
+  label { display: block; font-weight: 600; margin-bottom: 8px; font-size: 0.95rem; }
+  .theme-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { background: var(--panel-2); border: 1px solid var(--border); padding: 6px 12px; border-radius: 20px; cursor: pointer; font-size: 0.85rem; user-select: none; transition: all 0.15s; }
+  .chip:hover { border-color: var(--accent); }
+  .chip.active { background: var(--accent); border-color: var(--accent); color: white; }
+  .chip .count { opacity: 0.7; font-size: 0.75rem; margin-left: 4px; }
+  button { background: var(--accent); color: white; border: none; padding: 12px 24px; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: background 0.15s; }
+  button:hover { background: var(--accent-hover); }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  button.secondary { background: var(--panel-2); border: 1px solid var(--border); }
+  button.secondary:hover { background: var(--border); }
+  .actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 16px; }
+  .question-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; color: var(--muted); font-size: 0.9rem; }
+  .question-text { font-size: 1.05rem; margin-bottom: 16px; white-space: pre-wrap; }
+  .q-image { margin: 12px 0 16px; text-align: center; background: rgba(255,255,255,0.95); border-radius: 8px; padding: 12px; cursor: zoom-in; }
+  .q-image img { max-width: 100%; height: auto; border-radius: 4px; display: block; margin: 0 auto; }
+  .q-image-missing { background: rgba(239,68,68,0.1); border: 1px dashed var(--bad); color: var(--bad); padding: 12px; border-radius: 8px; font-size: 0.85rem; margin: 12px 0; text-align: center; }
+  .lightbox { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 1000; align-items: center; justify-content: center; cursor: zoom-out; padding: 20px; }
+  .lightbox.active { display: flex; }
+  .lightbox img { max-width: 95%; max-height: 95vh; border-radius: 4px; }
+  .multi-hint { background: #1e3a5f; border-left: 3px solid var(--accent); padding: 8px 12px; border-radius: 4px; font-size: 0.85rem; color: var(--text); margin-bottom: 16px; }
+  .options { display: flex; flex-direction: column; gap: 8px; }
+  .option { background: var(--panel-2); border: 2px solid var(--border); border-radius: 8px; padding: 12px 16px; cursor: pointer; transition: all 0.15s; display: flex; align-items: flex-start; gap: 12px; }
+  .option-text { white-space: pre-wrap; flex: 1; }
+  .option:hover:not(.disabled) { border-color: var(--accent); }
+  .option.selected { border-color: var(--accent); background: rgba(59,130,246,0.1); }
+  .option.correct { border-color: var(--good); background: rgba(34,197,94,0.15); }
+  .option.incorrect { border-color: var(--bad); background: rgba(239,68,68,0.15); }
+  .option.missed { border-color: var(--good); background: rgba(34,197,94,0.05); border-style: dashed; }
+  .option.disabled { cursor: default; }
+  .option-marker { flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; background: var(--border); display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 700; }
+  .option.correct .option-marker { background: var(--good); }
+  .option.incorrect .option-marker { background: var(--bad); }
+  .option.missed .option-marker { background: var(--good); opacity: 0.5; }
+  .explanation { background: rgba(59,130,246,0.1); border-left: 3px solid var(--accent); padding: 12px 16px; border-radius: 4px; margin-top: 16px; font-size: 0.9rem; }
+  .feedback { margin-top: 16px; padding: 12px 16px; border-radius: 8px; font-weight: 600; }
+  .feedback.correct { background: rgba(34,197,94,0.2); color: var(--good); }
+  .feedback.incorrect { background: rgba(239,68,68,0.2); color: var(--bad); }
+  .progress-bar { height: 6px; background: var(--panel-2); border-radius: 3px; overflow: hidden; margin-bottom: 16px; }
+  .progress-fill { height: 100%; background: var(--accent); transition: width 0.3s; }
+  .themes-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; margin-bottom: 8px; }
+  .tag { background: var(--panel-2); padding: 2px 8px; border-radius: 10px; font-size: 0.75rem; color: var(--muted); }
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 20px; }
+  .stat-card { background: var(--panel-2); padding: 16px; border-radius: 8px; text-align: center; }
+  .stat-value { font-size: 1.8rem; font-weight: 700; color: var(--accent); }
+  .stat-label { color: var(--muted); font-size: 0.85rem; margin-top: 4px; }
+  .history { max-height: 300px; overflow-y: auto; background: var(--panel-2); border-radius: 8px; padding: 12px; }
+  .history-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 0.9rem; gap: 12px; }
+  .history-item:last-child { border-bottom: none; }
+  .history-score { font-weight: 700; white-space: nowrap; }
+  .danger-zone { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border); }
+  .danger-zone button { background: transparent; color: var(--bad); border: 1px solid var(--bad); }
+  .danger-zone button:hover { background: var(--bad); color: white; }
+  .checkbox-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  input[type="number"] { background: var(--panel-2); color: var(--text); border: 1px solid var(--border); padding: 8px 12px; border-radius: 6px; width: 100px; font-size: 1rem; }
+  .keyboard-hint { color: var(--muted); font-size: 0.8rem; margin-top: 12px; text-align: center; }
+  .loading { text-align: center; color: var(--muted); padding: 40px; font-size: 1.1rem; }
+  .error-box { background: rgba(239,68,68,0.1); border: 1px solid var(--bad); padding: 20px; border-radius: 8px; }
+  .error-box h3 { margin-top: 0; color: var(--bad); }
+  pre { background: rgba(0,0,0,0.4); padding: 10px; border-radius: 6px; font-size: 0.85rem; overflow-x: auto; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>QCM CCNA 3 — ENSAv7</h1>
+    <div class="subtitle">Examen final — Entraînement local</div>
+  </header>
+ 
+  <div id="screen-loading" class="panel">
+    <div class="loading">⏳ Chargement des questions…</div>
+  </div>
+ 
+  <div id="screen-error" class="panel" style="display:none">
+    <div class="error-box">
+      <h3>❌ Impossible de charger questions.json</h3>
+      <p>Le navigateur bloque la lecture des fichiers locaux en mode <code>file://</code>. Lance un serveur HTTP depuis le dossier <code>ccna3_final/</code> :</p>
+      <pre>python3 -m http.server 8000</pre>
+      <p>Puis ouvre <strong>http://localhost:8000</strong> dans Firefox ou Chrome.</p>
+      <p style="color:var(--muted); font-size:0.85rem">Erreur : <span id="err-detail"></span></p>
+    </div>
+  </div>
+ 
+  <div id="screen-setup" class="panel" style="display:none">
+    <h2 style="margin-top:0">Configuration de la session</h2>
+    <div class="setup-grid">
+      <div>
+        <label>Thèmes (clique pour filtrer, vide = tous)</label>
+        <div id="theme-chips" class="theme-chips"></div>
+      </div>
+      <div>
+        <label for="num-questions">Nombre de questions</label>
+        <input type="number" id="num-questions" min="1" value="20">
+        <span style="color:var(--muted); margin-left:8px; font-size:0.9rem;">
+          (disponibles : <span id="available-count">0</span>)
+        </span>
+      </div>
+      <div class="checkbox-row">
+        <input type="checkbox" id="shuffle-options" checked>
+        <label for="shuffle-options" style="margin:0">Mélanger l'ordre des options</label>
+      </div>
+      <div class="checkbox-row">
+        <input type="checkbox" id="include-images" checked>
+        <label for="include-images" style="margin:0">Inclure les questions avec illustrations</label>
+      </div>
+    </div>
+    <div class="actions">
+      <button id="btn-start">Démarrer</button>
+      <button class="secondary" id="btn-show-stats">Voir mes statistiques</button>
+    </div>
+  </div>
+ 
+  <div id="screen-quiz" class="panel" style="display:none">
+    <div class="progress-bar"><div id="progress-fill" class="progress-fill"></div></div>
+    <div class="question-header">
+      <span id="q-counter"></span>
+      <span id="q-score"></span>
+    </div>
+    <div id="q-themes" class="themes-tags"></div>
+    <div id="multi-hint" class="multi-hint" style="display:none"></div>
+    <div id="q-text" class="question-text"></div>
+    <div id="q-image-container"></div>
+    <div id="q-options" class="options"></div>
+    <div id="q-feedback"></div>
+    <div id="q-explanation"></div>
+    <div class="actions">
+      <button id="btn-validate">Valider</button>
+      <button id="btn-next" style="display:none">Question suivante</button>
+      <button class="secondary" id="btn-quit">Abandonner</button>
+    </div>
+    <div class="keyboard-hint">Raccourcis : 1-9 pour sélectionner, Entrée pour valider/suivant</div>
+  </div>
+ 
+  <div id="screen-results" class="panel" style="display:none">
+    <h2 style="margin-top:0">Résultats</h2>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-value" id="r-score"></div><div class="stat-label">Score</div></div>
+      <div class="stat-card"><div class="stat-value" id="r-percent"></div><div class="stat-label">Pourcentage</div></div>
+      <div class="stat-card"><div class="stat-value" id="r-time"></div><div class="stat-label">Temps</div></div>
+    </div>
+    <div class="actions">
+      <button id="btn-replay">Nouvelle session</button>
+      <button class="secondary" id="btn-review">Revoir les erreurs</button>
+    </div>
+  </div>
+ 
+  <div id="screen-stats" class="panel" style="display:none">
+    <h2 style="margin-top:0">Statistiques globales</h2>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-value" id="s-sessions"></div><div class="stat-label">Sessions</div></div>
+      <div class="stat-card"><div class="stat-value" id="s-best"></div><div class="stat-label">Meilleur score</div></div>
+      <div class="stat-card"><div class="stat-value" id="s-avg"></div><div class="stat-label">Moyenne</div></div>
+      <div class="stat-card"><div class="stat-value" id="s-total"></div><div class="stat-label">Questions répondues</div></div>
+    </div>
+    <h3>Historique</h3>
+    <div id="history" class="history"></div>
+    <div class="danger-zone">
+      <button id="btn-reset-stats">Réinitialiser les statistiques</button>
+    </div>
+    <div class="actions">
+      <button class="secondary" id="btn-back-from-stats">Retour</button>
+    </div>
+  </div>
+ 
+  <div id="screen-review" class="panel" style="display:none">
+    <h2 style="margin-top:0">Revue des erreurs</h2>
+    <div id="review-content"></div>
+    <div class="actions">
+      <button id="btn-back-from-review">Retour</button>
+    </div>
+  </div>
+</div>
+ 
+<div id="lightbox" class="lightbox">
+  <img id="lightbox-img" src="" alt="Illustration agrandie">
+</div>
+ 
+<script>
+let QUESTIONS = [];
+let ALL_THEMES = [];
+ 
+const state = {
+  filteredQuestions: [], currentQuiz: [], currentIndex: 0,
+  score: 0, selectedThemes: new Set(), userAnswers: [],
+  startTime: 0, shuffleOptions: true, includeImages: true,
+};
+ 
+// ---------- Chargement ----------
+async function loadQuestions() {
+  try {
+    const res = await fetch('questions.json');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    QUESTIONS = await res.json();
+    const ts = new Set();
+    QUESTIONS.forEach(q => (q.themes || []).forEach(t => ts.add(t)));
+    ALL_THEMES = [...ts].sort();
+    document.getElementById('screen-loading').style.display = 'none';
+    document.getElementById('screen-setup').style.display = 'block';
+    renderThemeChips();
+    filterQuestions();
+  } catch(e) {
+    document.getElementById('screen-loading').style.display = 'none';
+    document.getElementById('screen-error').style.display = 'block';
+    document.getElementById('err-detail').textContent = e.message;
+  }
+}
+ 
+// ---------- localStorage ----------
+const STORAGE_KEY = 'ccna_qcm_history';
+function loadHistory() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch { return []; } }
+function saveSession(s) { const h = loadHistory(); h.push(s); localStorage.setItem(STORAGE_KEY, JSON.stringify(h)); }
+function clearHistory() { localStorage.removeItem(STORAGE_KEY); }
+ 
+// ---------- Utils ----------
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length-1; i > 0; i--) { const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+  return a;
+}
+function show(id) {
+  ['setup','quiz','results','stats','review'].forEach(s => {
+    const el = document.getElementById('screen-'+s);
+    if (el) el.style.display = (s===id) ? 'block' : 'none';
+  });
+}
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function formatTime(secs) { const m=Math.floor(secs/60), s=secs%60; return m>0?`${m}m ${s}s`:`${s}s`; }
+ 
+// ---------- Filtrage ----------
+function filterQuestions() {
+  let pool = QUESTIONS;
+  if (!state.includeImages) pool = pool.filter(q => !q.image);
+  if (state.selectedThemes.size > 0) pool = pool.filter(q => (q.themes||[]).some(t => state.selectedThemes.has(t)));
+  state.filteredQuestions = pool;
+  document.getElementById('available-count').textContent = pool.length;
+  const inp = document.getElementById('num-questions');
+  inp.max = pool.length;
+  if (parseInt(inp.value) > pool.length) inp.value = pool.length;
+}
+ 
+// ---------- Setup ----------
+function renderThemeChips() {
+  const container = document.getElementById('theme-chips');
+  container.innerHTML = '';
+  const counts = {};
+  ALL_THEMES.forEach(t => counts[t] = 0);
+  QUESTIONS.forEach(q => (q.themes||[]).forEach(t => { if(counts[t]!==undefined) counts[t]++; }));
+  ALL_THEMES.forEach(theme => {
+    const chip = document.createElement('div');
+    chip.className = 'chip';
+    chip.innerHTML = `${theme}<span class="count">(${counts[theme]})</span>`;
+    chip.addEventListener('click', () => {
+      if (state.selectedThemes.has(theme)) { state.selectedThemes.delete(theme); chip.classList.remove('active'); }
+      else { state.selectedThemes.add(theme); chip.classList.add('active'); }
+      filterQuestions();
+    });
+    container.appendChild(chip);
+  });
+}
+ 
+// ---------- Quiz ----------
+function startQuiz() {
+  filterQuestions();
+  if (state.filteredQuestions.length === 0) { alert('Aucune question disponible pour ces filtres.'); return; }
+  const num = Math.min(parseInt(document.getElementById('num-questions').value)||20, state.filteredQuestions.length);
+  state.shuffleOptions = document.getElementById('shuffle-options').checked;
+  const shuffled = shuffle(state.filteredQuestions);
+  state.currentQuiz = shuffled.slice(0, num).map(q => {
+    if (state.shuffleOptions) {
+      const owi = q.options.map((opt,i) => ({text:opt, isCorrect:q.correct.includes(i)}));
+      const so = shuffle(owi);
+      return {...q, options: so.map(o=>o.text), correct: so.map((o,i)=>o.isCorrect?i:-1).filter(i=>i>=0)};
+    }
+    return q;
+  });
+  state.currentIndex = 0; state.score = 0; state.userAnswers = []; state.startTime = Date.now();
+  show('quiz'); renderQuestion();
+}
+ 
+function renderQuestion() {
+  const q = state.currentQuiz[state.currentIndex];
+  document.getElementById('progress-fill').style.width = (state.currentIndex/state.currentQuiz.length*100)+'%';
+  document.getElementById('q-counter').textContent = `Question ${state.currentIndex+1} / ${state.currentQuiz.length}`;
+  document.getElementById('q-score').textContent = `Score : ${state.score}`;
+ 
+  const themesEl = document.getElementById('q-themes');
+  themesEl.innerHTML = '';
+  (q.themes||[]).forEach(t => { const tag=document.createElement('span'); tag.className='tag'; tag.textContent=t; themesEl.appendChild(tag); });
+ 
+  const hintEl = document.getElementById('multi-hint');
+  if (q.correct.length > 1) { hintEl.style.display='block'; hintEl.textContent=`⚠ Plusieurs bonnes réponses (${q.correct.length} à choisir)`; }
+  else { hintEl.style.display='none'; }
+ 
+  document.getElementById('q-text').textContent = q.question;
+ 
+  // Image
+  const imgC = document.getElementById('q-image-container');
+  imgC.innerHTML = '';
+  if (q.image) {
+    const wrap = document.createElement('div'); wrap.className = 'q-image';
+    const img = document.createElement('img');
+    img.src = 'images/' + q.image; img.alt = 'Illustration';
+    img.onerror = () => { wrap.className='q-image-missing'; wrap.innerHTML=`⚠ Image manquante : <code>${q.image}</code>`; };
+    img.addEventListener('click', () => { document.getElementById('lightbox-img').src=img.src; document.getElementById('lightbox').classList.add('active'); });
+    wrap.appendChild(img); imgC.appendChild(wrap);
+  }
+ 
+  const optsEl = document.getElementById('q-options');
+  optsEl.innerHTML = '';
+  q.options.forEach((opt, i) => {
+    const d = document.createElement('div'); d.className='option'; d.dataset.idx=i;
+    const m = document.createElement('div'); m.className='option-marker'; m.textContent=String.fromCharCode(65+i);
+    const t = document.createElement('div'); t.className='option-text'; t.textContent=opt;
+    d.appendChild(m); d.appendChild(t);
+    d.addEventListener('click', () => toggleSelect(i));
+    optsEl.appendChild(d);
+  });
+ 
+  document.getElementById('q-feedback').innerHTML = '';
+  document.getElementById('q-explanation').innerHTML = '';
+  document.getElementById('btn-validate').style.display = 'inline-block';
+  document.getElementById('btn-validate').disabled = false;
+  document.getElementById('btn-next').style.display = 'none';
+}
+ 
+function toggleSelect(idx) {
+  const q = state.currentQuiz[state.currentIndex];
+  const opts = document.querySelectorAll('#q-options .option');
+  if (opts[idx].classList.contains('disabled')) return;
+  if (q.correct.length === 1) { opts.forEach(o => o.classList.remove('selected')); opts[idx].classList.add('selected'); }
+  else { opts[idx].classList.toggle('selected'); }
+}
+ 
+function validateAnswer() {
+  const q = state.currentQuiz[state.currentIndex];
+  const selected = [...document.querySelectorAll('#q-options .option.selected')].map(o => parseInt(o.dataset.idx));
+  if (selected.length === 0) { alert('Sélectionne au moins une réponse.'); return; }
+  if (q.correct.length > 1 && selected.length !== q.correct.length) {
+    if (!confirm(`Tu as sélectionné ${selected.length} réponse(s) mais ${q.correct.length} sont attendues. Valider quand même ?`)) return;
+  }
+  const cSet = new Set(q.correct), sSet = new Set(selected);
+  const isCorrect = cSet.size === sSet.size && [...cSet].every(x => sSet.has(x));
+  if (isCorrect) state.score++;
+ 
+  document.querySelectorAll('#q-options .option').forEach((o,i) => {
+    o.classList.add('disabled'); o.classList.remove('selected');
+    if (sSet.has(i) && cSet.has(i)) o.classList.add('correct');
+    else if (sSet.has(i) && !cSet.has(i)) o.classList.add('incorrect');
+    else if (!sSet.has(i) && cSet.has(i)) o.classList.add('missed');
+  });
+ 
+  const fb = document.getElementById('q-feedback');
+  fb.className = 'feedback '+(isCorrect?'correct':'incorrect');
+  fb.textContent = isCorrect ? '✓ Correct !' : '✗ Incorrect';
+ 
+  if (q.explanation) {
+    const ex = document.getElementById('q-explanation');
+    ex.className = 'explanation';
+    ex.innerHTML = '<strong>Explication :</strong> ' + escapeHtml(q.explanation);
+  }
+ 
+  state.userAnswers.push({qId:q.id, selected, correct:q.correct, isCorrect, question:q.question, options:q.options, explanation:q.explanation, image:q.image});
+  document.getElementById('btn-validate').style.display = 'none';
+  document.getElementById('btn-next').style.display = 'inline-block';
+  document.getElementById('q-score').textContent = `Score : ${state.score}`;
+}
+ 
+function nextQuestion() {
+  state.currentIndex++;
+  if (state.currentIndex >= state.currentQuiz.length) finishQuiz();
+  else renderQuestion();
+}
+ 
+function finishQuiz() {
+  const elapsed = Math.round((Date.now()-state.startTime)/1000);
+  const pct = Math.round(state.score/state.currentQuiz.length*100);
+  document.getElementById('r-score').textContent = `${state.score} / ${state.currentQuiz.length}`;
+  document.getElementById('r-percent').textContent = `${pct}%`;
+  document.getElementById('r-time').textContent = formatTime(elapsed);
+  saveSession({date:new Date().toISOString(), score:state.score, total:state.currentQuiz.length, percent:pct, time:elapsed, themes:[...state.selectedThemes]});
+  show('results');
+}
+ 
+// ---------- Stats ----------
+function showStats() {
+  const h = loadHistory();
+  document.getElementById('s-sessions').textContent = h.length;
+  if (h.length > 0) {
+    document.getElementById('s-best').textContent = Math.max(...h.map(s=>s.percent))+'%';
+    document.getElementById('s-avg').textContent = Math.round(h.reduce((a,s)=>a+s.percent,0)/h.length)+'%';
+    document.getElementById('s-total').textContent = h.reduce((a,s)=>a+s.total,0);
+  } else {
+    ['s-best','s-avg'].forEach(id => document.getElementById(id).textContent='–');
+    document.getElementById('s-total').textContent = '0';
+  }
+  const histEl = document.getElementById('history');
+  histEl.innerHTML = '';
+  if (h.length === 0) { histEl.innerHTML='<div style="text-align:center;color:var(--muted);padding:20px">Aucune session enregistrée</div>'; }
+  else {
+    [...h].reverse().forEach(s => {
+      const item = document.createElement('div'); item.className='history-item';
+      const d = new Date(s.date);
+      const dateStr = d.toLocaleDateString('fr-FR')+' '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+      const themesStr = s.themes&&s.themes.length ? ` [${s.themes.join(', ')}]` : '';
+      const l=document.createElement('span'); l.textContent=dateStr+themesStr;
+      const r=document.createElement('span'); r.className='history-score'; r.textContent=`${s.score}/${s.total} (${s.percent}%) — ${formatTime(s.time)}`;
+      item.appendChild(l); item.appendChild(r); histEl.appendChild(item);
+    });
+  }
+  show('stats');
+}
+ 
+// ---------- Revue ----------
+function showReview() {
+  const wrong = state.userAnswers.filter(a => !a.isCorrect);
+  const content = document.getElementById('review-content');
+  if (wrong.length === 0) { content.innerHTML='<p style="text-align:center;color:var(--good);font-size:1.2rem">🎉 Aucune erreur !</p>'; }
+  else {
+    content.innerHTML = '';
+    wrong.forEach((a, idx) => {
+      const div = document.createElement('div'); div.className='panel'; div.style.background='var(--panel-2)'; div.style.marginBottom='12px';
+      let imgHtml = '';
+      if (a.image) imgHtml = `<div class="q-image"><img src="images/${escapeHtml(a.image)}" alt="" onerror="this.parentElement.className='q-image-missing';this.parentElement.textContent='Image manquante'"></div>`;
+      let optsHtml = '';
+      a.options.forEach((opt,i) => {
+        const ic=a.correct.includes(i), ws=a.selected.includes(i);
+        let cls='option disabled';
+        if(ws&&ic) cls+=' correct'; else if(ws&&!ic) cls+=' incorrect'; else if(!ws&&ic) cls+=' missed';
+        optsHtml+=`<div class="${cls}"><div class="option-marker">${String.fromCharCode(65+i)}</div><div class="option-text">${escapeHtml(opt)}</div></div>`;
+      });
+      div.innerHTML=`<div style="color:var(--muted);margin-bottom:8px;font-size:0.85rem">Erreur ${idx+1}</div><div class="question-text">${escapeHtml(a.question)}</div>${imgHtml}<div class="options">${optsHtml}</div>${a.explanation?`<div class="explanation"><strong>Explication :</strong> ${escapeHtml(a.explanation)}</div>`:''}`;
+      content.appendChild(div);
+    });
+  }
+  show('review');
+}
+ 
+// ---------- Events ----------
+document.getElementById('btn-start').addEventListener('click', startQuiz);
+document.getElementById('btn-validate').addEventListener('click', validateAnswer);
+document.getElementById('btn-next').addEventListener('click', nextQuestion);
+document.getElementById('btn-quit').addEventListener('click', () => { if(confirm('Abandonner la session en cours ?')) show('setup'); });
+document.getElementById('btn-replay').addEventListener('click', () => show('setup'));
+document.getElementById('btn-show-stats').addEventListener('click', showStats);
+document.getElementById('btn-back-from-stats').addEventListener('click', () => show('setup'));
+document.getElementById('btn-review').addEventListener('click', showReview);
+document.getElementById('btn-back-from-review').addEventListener('click', () => show('results'));
+document.getElementById('btn-reset-stats').addEventListener('click', () => { if(confirm('Effacer tout l\'historique ?')) { clearHistory(); showStats(); } });
+document.getElementById('include-images').addEventListener('change', e => { state.includeImages=e.target.checked; filterQuestions(); });
+document.getElementById('lightbox').addEventListener('click', () => document.getElementById('lightbox').classList.remove('active'));
+document.addEventListener('keydown', e => {
+  if (document.getElementById('lightbox').classList.contains('active') && e.key==='Escape') { document.getElementById('lightbox').classList.remove('active'); return; }
+  if (document.getElementById('screen-quiz').style.display==='none') return;
+  if (e.key>='1'&&e.key<='9') { const idx=parseInt(e.key)-1; const opts=document.querySelectorAll('#q-options .option'); if(opts[idx]&&!opts[idx].classList.contains('disabled')) toggleSelect(idx); }
+  else if (e.key==='Enter') { e.preventDefault(); if(document.getElementById('btn-next').style.display!=='none') nextQuestion(); else if(document.getElementById('btn-validate').style.display!=='none') validateAnswer(); }
+});
+ 
+loadQuestions();
+</script>
+</body>
+</html>
+ 
